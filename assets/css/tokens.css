@@ -1,0 +1,65 @@
+/* ==========================================================================
+   KBR – tokeny projektowe
+   Wartości odczytane z projektu strony głównej (KBR_Home.pdf, szerokość 1440 px).
+   ========================================================================== */
+:root {
+  /* Kolory */
+  --c-blue: #3252b5;          /* pasek informacyjny, linki, akcje drugorzędne */
+  --c-blue-dark: #263f8f;     /* hover linków */
+  --c-navy: #162447;          /* stopka, etykiety „Case studies”, ikony */
+  --c-ink: #030928;           /* najciemniejszy tekst, pola w stopce */
+  --c-text: #3e4965;          /* tekst podstawowy, menu, metadane */
+  --c-muted: #596176;         /* opisy drugorzędne */
+  --c-placeholder: #788094;   /* placeholder, linia pionowa w sekcji magazynu */
+  --c-date: #6b7389;          /* daty na kartach – w projekcie #788094, przyciemnione do kontrastu 4.5:1 */
+  --c-gold: #91653f;          /* kategorie, znak KBR, etykieta Premium */
+  --c-gold-light: #b4865e;    /* etykiety w stopce */
+  --c-crimson: #a00332;       /* główne CTA */
+  --c-crimson-dark: #82022a;  /* hover CTA */
+  --c-tint: #f2f5ff;          /* tła sekcji, newsletter, przyciski „Zapisz się” */
+  --c-tint-strong: #e3e8fb;   /* hover na tle tint */
+  --c-border: #e8e9ed;        /* linie nagłówka i sekcji */
+  --c-border-strong: #a0a5b3; /* linia sekcji magazynu, pola formularzy */
+  --c-border-blue: #abb8df;   /* podziały spisu treści magazynu */
+  --c-title: #000000;         /* tytuły w Cormorant Garamond */
+  --c-white: #ffffff;
+  --c-success: #1f6b45;
+  --c-success-tint: #e8f4ee;
+  --c-error: #b00020;
+  --c-error-tint: #fdecef;
+  --c-focus: #3252b5;
+
+  /* Typografia */
+  --f-sans: "Open Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-serif: "Cormorant Garamond", Garamond, Georgia, "Times New Roman", serif;
+
+  --fs-12: 12px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --fs-64: 64px;
+
+  --ls-label: 0.03em;    /* kategorie, nagłówki sekcji */
+  --ls-topbar: 0.15em;   /* pasek informacyjny */
+
+  /* Siatka */
+  --container: 1312px;
+  --gutter: 64px;        /* margines strony przy 1440 px */
+  --gap: 32px;           /* odstęp między kolumnami */
+  --col-card: 304px;
+
+  /* Kształty */
+  --radius: 2px;
+  --radius-btn: 3px;
+  --shadow-nav: 0 4px 10px rgba(3, 9, 40, 0.04);
+  --shadow-card: 0 2px 8px rgba(22, 36, 71, 0.14);
+}
+
+@media (max-width: 1200px) {
+  :root { --gutter: 40px; --gap: 24px; }
+}
+@media (max-width: 760px) {
+  :root { --gutter: 16px; --gap: 16px; }
+}
