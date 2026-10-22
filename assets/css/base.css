@@ -70,9 +70,9 @@ a.t-label:hover { text-decoration: underline; }
   font-size: var(--fs-16); line-height: 22px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.035em; color: var(--c-text);
 }
-.t-serif { font-family: var(--f-serif); color: var(--c-title); font-weight: 600; }
-.t-title-xl { font-family: var(--f-serif); font-weight: 600; font-size: var(--fs-64); line-height: 72px; color: var(--c-title); letter-spacing: -0.005em; }
-.t-title-card { font-family: var(--f-serif); font-weight: 600; font-size: var(--fs-24); line-height: 27px; color: var(--c-title); }
+.t-serif { font-family: var(--f-serif); color: var(--c-title); font-weight: 500; }
+.t-title-xl { font-family: var(--f-serif); font-weight: 500; font-size: 56px; line-height: 67px; color: var(--c-title); letter-spacing: -0.005em; }
+.t-title-card { font-family: var(--f-serif); font-weight: 500; font-size: 21px; line-height: 25px; color: var(--c-title); }
 .t-title-card--loose { line-height: 27px; }
 .t-lead { font-size: var(--fs-18); line-height: 27px; color: var(--c-text); }
 .t-body { font-size: var(--fs-16); line-height: 22px; color: var(--c-text); }
