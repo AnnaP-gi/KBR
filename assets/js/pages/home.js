@@ -7,12 +7,15 @@ KBR.pages.home = function () {
   const subscribed = KBR.subscription.has('premium');
 
   const picks = H.picks.map(get);
-  const pickFirst = '<article class="card">' + ui.media(picks[0]) + ui.topicLabel(picks[0]) +
-    ui.titleLink(picks[0]) + '<p class="t-body card__lead">' + esc(picks[0].lead) + '</p><p class="t-meta card__author">' + ui.metaLine(picks[0]) + '</p></article>';
-  const pickRest = picks.slice(1).map(function (m) { return ui.card(m, { noImage: true, date: false }); }).join('');
+  /* zdjęcie przy środkowym artykule kolumny */
+  const mid = Math.floor(picks.length / 2);
+  const pickCards = picks.map(function (m, i) {
+    if (i !== mid) return ui.card(m, { noImage: true, date: false });
+    return '<article class="card card--img">' + ui.media(m) + ui.topicLabel(m) +
+      ui.titleLink(m) + '<p class="t-body card__lead">' + esc(m.lead) + '</p><p class="t-meta card__author">' + ui.metaLine(m) + '</p></article>';
+  }).join('');
   const latest = H.latest.map(get).map(function (m) { return ui.card(m, { noImage: true, date: false }); }).join('');
 
-  const premium = H.premium.map(get).map(function (m) { return ui.card(m, {}); }).join('');
 
   const issue = C.currentIssue();
   const toc = issue.toc.map(get);
@@ -23,32 +26,27 @@ KBR.pages.home = function () {
       '<span class="t-meta">' + esc(m.authors.filter(function (a) { return a.role === 'autor'; }).map(function (a) { return C.author(a.id).name; }).join(', ')) + '</span></a>';
   }).join('');
 
-  const cases = H.cases.map(get).map(function (m) {
-    return '<article class="card case-card">' + ui.media(m, { image: 'case-tlo.jpg', logo: m.caseLogo, formatBadge: 'Case studies', lock: false }) + ui.topicLabel(m) +
-      ui.titleLink(m, 't-title-card--loose') + '<p class="t-meta card__author">' + esc(m.authors.filter(function (a) { return a.role === 'autor'; }).map(function (a) { return C.author(a.id).name; }).join(', ')) + '</p></article>';
-  }).join('');
+  const latest2 = H.latest.slice(0, 2).map(get).map(function (m) { return ui.card(m, { noImage: true, date: false }); }).join('');
+  /* Zajawka najnowszego numeru w kolumnie „Najnowsze” */
+  const magTeaser = '<a class="mag-teaser" href="#/magazyn" aria-label="Nowy numer magazynu KBR: ' + esc(issue.label) + ', ' + esc(issue.title) + '">' +
+    '<span class="mag-teaser__cover"><img src="' + ui.img(issue.cover) + '" alt="" loading="lazy"></span>' +
+    '<span class="mag-teaser__body"><span class="t-label">Nowy numer</span>' +
+      '<span class="mag-teaser__issue">' + esc(issue.label) + '</span>' +
+      '<span class="mag-teaser__title">' + esc(issue.title) + '</span>' +
+      '<span class="mag-teaser__more">Zobacz spis treści' + I('chevRight', 14, 'stroke-width="2.25"') + '</span></span></a>';
 
-  const platforms = function (m) {
-    return '<ul class="platforms" aria-label="Słuchaj i oglądaj w serwisach zewnętrznych">' +
-      [['spotify', 'Spotify', 'https://open.spotify.com'], ['youtube', 'YouTube', 'https://www.youtube.com'], ['apple-podcasts', 'Apple Podcasts', 'https://podcasts.apple.com']].map(function (p) {
-        return '<li><a href="' + p[2] + '" target="_blank" rel="noopener" aria-label="' + p[1] + ' – ' + esc(m.title) + ' (serwis zewnętrzny, adres odcinka do uzupełnienia)"><img src="assets/img/ikona-' + p[0] + '.png" alt=""></a></li>';
-      }).join('') + '</ul>';
-  };
-  const media = H.media.map(get).map(function (m) {
-    const f = C.format(m.format);
-    return '<article class="card card--overlay card--media">' + ui.media(m, { formatBadge: m.format === 'podcast' ? f.badge : null, play: true, lock: false }) +
-      '<p class="card__format"><span class="fmt-ico">' + I('play', 12) + '</span><strong>' + esc(f.name) + '</strong><span>• ' + m.duration + ' min</span></p>' +
-      ui.topicLabel(m) + ui.titleLink(m, 't-title-card--loose') + '<p class="t-meta card__author">' + ui.metaLine(m) + '</p>' + platforms(m) + '</article>';
+  const topicTiles = KBR.data.topics.map(function (t, i) {
+    const items = C.list({ topic: t.id });
+    const top = items[0];
+    return '<a class="topic-tile' + (i === 0 ? ' topic-tile--lg' : '') + '" href="#/tematy/' + t.slug + '">' +
+      (top ? '<img src="' + ui.img(top.image) + '" alt="" loading="lazy"' + (top.imagePos ? ' style="object-position:' + top.imagePos + '"' : '') + '>' : '') +
+      '<span class="topic-tile__shade" aria-hidden="true"></span>' +
+      '<span class="topic-tile__nr" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</span>' +
+      '<span class="topic-tile__body"><span class="topic-tile__name">' + esc(t.name) + '</span>' +
+        '<span class="topic-tile__count">' + ui.plMat(items.length) + '</span>' +
+        (top ? '<span class="topic-tile__latest"><span>Najnowszy</span>' + esc(top.title) + '</span>' : '') +
+      '</span><span class="topic-tile__arrow" aria-hidden="true">' + I('chevRight', 20, 'stroke-width="2"') + '</span></a>';
   }).join('');
-
-  const events = KBR.data.events.map(function (e) {
-    return '<article class="card event-card"><a class="card__media" href="#/wydarzenie/' + e.id + '" tabindex="-1" aria-hidden="true"><img src="' + ui.img(e.image) + '" alt="" loading="lazy"></a>' +
-      '<span class="t-label card__cat">' + esc(e.category) + '</span>' +
-      '<h3 class="card__title"><a class="t-title-card t-title-card--loose hover-title" href="#/wydarzenie/' + e.id + '">' + esc(e.title) + '</a></h3>' +
-      '<div class="card__eventmeta"><div>' + I('calendar', 24) + '<span><span class="visually-hidden">Termin: </span>' + esc(e.date) + '</span></div><div>' + I('pin', 24) + '<span><span class="visually-hidden">Miejsce: </span>' + esc(e.place) + '</span></div></div>' +
-      '<a class="btn btn--tint" href="#/wydarzenie/' + e.id + '" aria-label="Zapisz się: ' + esc(e.title) + '">Zapisz się' + I('chevRight', 16, 'stroke-width="2"') + '</a></article>';
-  }).join('');
-
   const html = '' +
     '<h1 class="visually-hidden">Kozminski Business Review – strona główna</h1>' +
     '<div class="container"><div class="home-hero">' +
@@ -57,53 +55,74 @@ KBR.pages.home = function () {
         '<h2><a class="t-title-xl hover-title" href="' + ui.materialUrl(lead) + '">' + esc(lead.title) + '</a></h2>' +
         '<p class="t-lead">' + esc(lead.lead) + '</p><p class="t-meta">' + ui.metaLine(lead) + '</p>' +
       '</article>' +
-      '<section class="picks" aria-labelledby="h-picks"><h2 class="t-section col-head" id="h-picks">Wybrane dla Ciebie</h2>' + pickFirst + pickRest + '</section>' +
-      '<section class="latest" aria-labelledby="h-latest"><h2 class="t-section col-head" id="h-latest">Najnowsze</h2>' + latest + ui.newsletterForm('home') + '</section>' +
+      '<section class="picks" aria-labelledby="h-picks"><h2 class="t-section col-head" id="h-picks">Wybrane dla Ciebie</h2>' + pickCards + '</section>' +
+      '<section class="latest" aria-labelledby="h-latest"><h2 class="t-section col-head" id="h-latest">Najnowsze</h2>' + magTeaser + latest2 + ui.newsletterForm('home') + '</section>' +
     '</div></div>' +
 
-    '<section class="container home-section home-premium" aria-labelledby="h-premium">' + ui.sectionHead('Dla subskrybentów', { href: '#/artykuly?dostep=premium', label: 'Więcej treści premium' }, { id: 'h-premium' }) +
-      '<div class="grid-4">' + premium + '</div></section>' +
 
     '<aside class="container" aria-label="Reklama">' + ui.promo() + '</aside>' +
 
-    '<section class="magazine" aria-labelledby="h-magazine"><div class="container">' +
-      '<div class="section-head section-head--strong section-head--icon"><h2 class="t-section" id="h-magazine">' + I('newspaper', 24, 'style="color:var(--c-text)"') + 'Magazyn</h2></div>' +
-      '<div class="magazine__grid">' +
-        '<div class="magazine__cover"><a href="#/magazyn" aria-label="Aktualny numer: ' + esc(issue.label) + '"><img src="' + ui.img(issue.cover) + '" alt="Okładka magazynu KBR ' + esc(issue.label) + ': ' + esc(issue.title) + '"></a>' +
-          '<a class="t-link" href="#/magazyn">Aktualny numer' + I('chevRight', 16, 'stroke-width="2"') + '</a></div>' +
-        '<div class="magazine__rule" aria-hidden="true"></div>' +
-        '<div class="magazine__feature"><img id="issue-feature" src="' + ui.img(issue.featureImage[toc[0].id]) + '" alt=""></div>' +
-        '<div class="magazine__toc"><h3 class="magazine__nr">' + esc(issue.label.toUpperCase()) + '</h3><nav aria-label="Spis treści numeru ' + esc(issue.label) + '">' + tocHtml + '</nav></div>' +
-      '</div></div></section>' +
+    '<section class="mag" aria-labelledby="h-magazine"><div class="container">' +
+      '<div class="mag__head mag-reveal" style="--i:0"><h2 id="h-magazine">' + I('newspaper', 22) + 'Magazyn</h2></div>' +
+      '<div class="mag__grid">' +
+        '<div class="mag__coverwrap mag-reveal" style="--i:1">' +
+          '<a class="mag-cover" href="#/magazyn" aria-label="Aktualny numer: ' + esc(issue.label) + ' – ' + esc(issue.title) + '">' +
+            ui.magCoverBook(issue) + '<span class="mag-cover__shadow" aria-hidden="true"></span></a>' +
+        '</div>' +
+        '<div class="mag__info">' +
+          '<span class="mag__kicker mag-reveal" style="--i:2">Aktualny numer</span>' +
+          '<h3 class="mag__title mag-reveal" style="--i:3">' + esc(issue.title) + '</h3>' +
+          '<p class="mag__desc mag-reveal" style="--i:4">' + esc(issue.description) + '</p>' +
+          '<ol class="mag__toc" aria-label="Spis treści numeru ' + esc(issue.label) + '">' + toc.map(function (m, i) {
+            return '<li class="mag-reveal" style="--i:' + (5 + i) + '"><a class="mag-toc" href="' + ui.materialUrl(m) + '">' +
+              '<span class="mag-toc__nr">' + String(i + 1).padStart(2, '0') + '</span>' +
+              '<span class="mag-toc__thumb" aria-hidden="true"><img src="' + ui.img(issue.featureImage[m.id] || m.image) + '" alt=""></span>' +
+              '<span class="mag-toc__body"><span class="mag-toc__topic">' + esc(C.topic(m.topic).name) + '</span><span class="mag-toc__title">' + esc(m.title) + (m.access === 'premium' ? '<span class="visually-hidden"> (Premium)</span>' : '') + '</span>' +
+              '<span class="mag-toc__author">Autor: ' + esc(m.authors.filter(function (x) { return x.role === 'autor'; }).map(function (x) { return C.author(x.id).name; }).join(', ')) + '</span></span>' +
+              '<span class="mag-toc__arrow" aria-hidden="true">' + I('chevRight', 18, 'stroke-width="2"') + '</span></a></li>';
+          }).join('') + '</ol>' +
+          '<div class="mag__cta mag-reveal" style="--i:9"><a class="btn btn--primary" href="#/magazyn">Czytaj numer' + I('chevRight', 16, 'stroke-width="2"') + '</a><a class="btn mag__btn-ghost" href="#/magazyn">Pobierz PDF</a></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="mag__shelf mag-reveal" style="--i:10"><span class="mag__kicker">Z archiwum</span>' +
+        '<div class="mag__shelf-row"><ul class="shelf">' +
+        KBR.data.issues.filter(function (x) { return x.archived; }).slice(0, 5).map(function (x, i) {
+          return '<li><a class="spine spine--' + (i % 5) + '" href="#/magazyn" data-title="' + esc(x.title) + '" data-desc="' + esc(x.description) + '" data-nr="' + esc(x.label) + '" style="--h:' + [222, 204, 232, 212, 198][i] + 'px">' +
+            '<span class="spine__nr">' + esc(x.label) + '</span><span class="spine__title">' + esc(x.title) + '</span></a></li>';
+        }).join('') + '</ul>' +
+        '<div class="mag__shelf-caption" aria-hidden="true"><span class="mag__shelf-nr"></span><span class="mag__shelf-title"></span><span class="mag__shelf-desc"></span><a class="mag__all" href="#/magazyn" tabindex="-1">Archiwum wydań' + I('chevRight', 14, 'stroke-width="2.25"') + '</a></div></div>' +
+      '</div>' +
+    '</div></section>' +
+    '<section class="container home-topics" aria-labelledby="h-topics">' + ui.sectionHead('Tematy', { href: '#/tematy', label: 'Wszystkie tematy' }, { id: 'h-topics' }) +
+      '<div class="topic-mosaic">' + topicTiles + '</div></section>' +
 
-    '<section class="container home-cases" aria-labelledby="h-cases">' + ui.sectionHead('Studia przypadków', { href: '#/studia-przypadkow', label: 'Zobacz wszystkie' }, { id: 'h-cases' }) + '<div class="grid-4">' + cases + '</div></section>' +
-    '<section class="container home-podcasts" aria-labelledby="h-pod">' + ui.sectionHead('Podcasty', { href: '#/podcasty', label: 'Zobacz wszystkie' }, { id: 'h-pod' }) + '<div class="grid-4">' + media + '</div></section>' +
-    '<section class="container home-events" aria-labelledby="h-events">' + ui.sectionHead('Wydarzenia', { href: '#/wydarzenia', label: 'Zobacz wszystkie' }, { id: 'h-events' }) + '<div class="grid-4">' + events + '</div></section>' +
 
-    '<div class="container cta-wide">' + (KBR.subscription.has('reports')
-      ? '<a class="btn btn--primary btn--lg" href="#/artykuly?dostep=premium">Przeglądaj treści premium' + I('chevRight', 24, 'stroke-width="2.25"') + '</a>'
-      : subscribed
-        ? '<a class="btn btn--primary btn--lg" href="#/subskrypcja">Rozszerz subskrypcję o magazyn i raporty' + I('chevRight', 24, 'stroke-width="2.25"') + '</a>'
-        : '<a class="btn btn--primary btn--lg" href="#/subskrypcja">Wybierz subskrypcję i czytaj bez ograniczeń' + I('chevRight', 24, 'stroke-width="2.25"') + '</a>') + '</div>' +
-
-    '<section class="community" aria-labelledby="h-community"><div class="container"><div class="section-head section-head--strong"><h2 class="t-section" id="h-community" style="padding-left:16px">Społeczność &amp; Executive Education</h2></div>' +
-      '<div class="community__grid">' +
-        '<div class="community-card"><div><h3>Kluby</h3><p>Społeczności praktyków, liderów i absolwentów.</p></div><a class="t-link" href="#/kluby">Poznaj kluby' + KBR.icon('chevRight', 14, 'stroke-width="2.25"') + '</a></div>' +
-        '<div class="community-card"><div><h3>Strefa Kozminski Executive Education</h3><p>Programy MBA i podyplomowe</p></div><a class="t-link" href="#/executive-education">Zobacz ofertę' + KBR.icon('chevRight', 14, 'stroke-width="2.25"') + '</a></div>' +
-      '</div></div></section>';
+    '<div class="container cta-wide"><a class="btn btn--primary btn--lg" href="#/subskrypcja">Wybierz subskrypcję i czytaj bez ograniczeń' + I('chevRight', 24, 'stroke-width="2.25"') + '</a></div>';
 
   return {
     title: 'Kozminski Business Review',
     html: html,
     mount: function (root) {
-      const feature = root.querySelector('#issue-feature');
-      root.querySelectorAll('[data-issue-item]').forEach(function (a) {
-        const activate = function () {
-          root.querySelectorAll('[data-issue-item]').forEach(function (x) { x.dataset.active = String(x === a); });
-          feature.src = ui.img(issue.featureImage[a.dataset.issueItem]);
-        };
-        a.addEventListener('mouseenter', activate); a.addEventListener('focus', activate);
-      });
+      const sec = root.querySelector('.mag');
+      if (!sec) return;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce || !('IntersectionObserver' in window)) sec.classList.add('is-in');
+      else {
+        const io = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { sec.classList.add('is-in'); io.disconnect(); } }, { threshold: 0.15 });
+        io.observe(sec);
+      }
+      ui.magCoverMotion(sec.querySelector('.mag-cover'));
+      const spines = sec.querySelectorAll('.spine'), cap = sec.querySelector('.mag__shelf-caption');
+      function pick(sp) {
+        spines.forEach(function (x) { x.classList.toggle('is-out', x === sp); });
+        cap.querySelector('.mag__shelf-nr').textContent = sp.dataset.nr;
+        cap.querySelector('.mag__shelf-title').textContent = sp.dataset.title;
+        cap.querySelector('.mag__shelf-desc').textContent = sp.dataset.desc;
+      }
+      if (spines.length && cap) {
+        pick(spines[0]);
+        spines.forEach(function (sp) { sp.addEventListener('pointerenter', function () { pick(sp); }); sp.addEventListener('focus', function () { pick(sp); }); });
+      }
     }
   };
 };

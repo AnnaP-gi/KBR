@@ -1,0 +1,134 @@
+/* ==========================================================================
+   KBR – styl formularza zamówienia w Jotform (Classic Form)
+   Gdzie wkleić: Kreator formularzy → Projektant formularza (ikona pędzla)
+   → Style → „Wstrzyknij własny CSS” (Inject Custom CSS).
+   Działa w formularzach typu Classic. Formularze Card mają ograniczone style.
+   Wartości odpowiadają tokenom serwisu (assets/css/tokens.css).
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Playfair+Display:wght@500&family=Cormorant+Garamond:wght@500;600&display=swap');
+
+:root {
+  --kbr-sans: "Open Sans", "Segoe UI", system-ui, sans-serif;
+  /* Serwis używa dziś Playfair Display w tytułach. Aby przejść na Cormorant Garamond,
+     zamień kolejność w tej jednej zmiennej. */
+  --kbr-serif: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --kbr-ink: #030928;
+  --kbr-text: #3e4965;
+  --kbr-muted: #596176;
+  --kbr-navy: #162447;
+  --kbr-blue: #3252b5;
+  --kbr-gold: #91653f;
+  --kbr-crimson: #a00332;
+  --kbr-crimson-dark: #82022a;
+  --kbr-tint: #f2f5ff;
+  --kbr-border: #e8e9ed;
+  --kbr-border-strong: #a0a5b3;
+  --kbr-error: #b00020;
+}
+
+/* Tło i kontener – formularz osadzony bez własnej „karty”, otoczenie daje strona KBR */
+html, body, .supernova { background: #fff !important; }
+.form-all {
+  font-family: var(--kbr-sans) !important;
+  color: var(--kbr-text) !important;
+  max-width: 720px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+}
+.form-section { padding: 0 24px !important; }
+.form-line { padding: 10px 0 !important; margin: 0 !important; }
+.form-line-active { background: transparent !important; }
+
+/* Nagłówki sekcji (pole „Nagłówek” w Jotform) – jak .form-section h2 w serwisie */
+.form-header-group { padding: 28px 0 0 !important; margin: 0 !important; border: 0 !important; }
+.form-header-group .form-header {
+  font-family: var(--kbr-sans) !important;
+  font-size: 14px !important; line-height: 19px !important; font-weight: 700 !important;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--kbr-text) !important;
+  padding-bottom: 12px; border-bottom: 1px solid var(--kbr-border);
+}
+.form-header-group .form-subHeader { font-size: 14px !important; line-height: 20px !important; color: var(--kbr-muted) !important; margin-top: 8px; }
+
+/* Etykiety i podpisy */
+.form-label, .form-label-top {
+  font-family: var(--kbr-sans) !important;
+  font-size: 14px !important; line-height: 19px !important; font-weight: 600 !important;
+  color: var(--kbr-navy) !important; margin-bottom: 6px !important;
+}
+.form-required { color: var(--kbr-crimson) !important; }
+.form-sub-label { font-size: 13px !important; color: var(--kbr-muted) !important; }
+.form-description, .form-description-content { font-size: 14px !important; color: var(--kbr-muted) !important; }
+
+/* Pola */
+.form-textbox, .form-textarea, .form-dropdown, .form-address-table input, .form-address-table select {
+  font-family: var(--kbr-sans) !important;
+  height: 44px !important; padding: 0 12px !important;
+  font-size: 16px !important; color: var(--kbr-ink) !important;
+  background: #fff !important;
+  border: 1px solid var(--kbr-border-strong) !important;
+  border-radius: 2px !important; box-shadow: none !important;
+  width: 100% !important; max-width: 100% !important; box-sizing: border-box;
+}
+.form-textarea { height: auto !important; min-height: 96px; padding: 10px 12px !important; }
+.form-textbox:focus, .form-textarea:focus, .form-dropdown:focus,
+.form-address-table input:focus, .form-address-table select:focus {
+  border-color: var(--kbr-blue) !important; box-shadow: 0 0 0 1px var(--kbr-blue) !important; outline: none !important;
+}
+.form-textbox[readonly] { background: #f7f8fb !important; color: var(--kbr-text) !important; }
+.form-validation-error .form-textbox, .form-validation-error .form-dropdown, .form-validation-error .form-textarea {
+  border-color: var(--kbr-error) !important; box-shadow: 0 0 0 1px var(--kbr-error) !important;
+}
+.form-error-message, .form-button-error {
+  background: transparent !important; color: var(--kbr-error) !important;
+  font-size: 14px !important; font-weight: 600 !important; padding: 6px 0 0 !important; border: 0 !important;
+}
+.form-error-arrow, .form-error-arrow-inner { display: none !important; }
+
+/* Pola wyboru i zgody */
+.form-checkbox-item label, .form-radio-item label, .form-checkbox-item, .form-radio-item {
+  font-family: var(--kbr-sans) !important; font-size: 14px !important; line-height: 20px !important; color: var(--kbr-text) !important;
+}
+.form-checkbox, .form-radio { accent-color: var(--kbr-blue); width: 20px; height: 20px; }
+.form-checkbox-item a, .form-html a, .form-label a { color: var(--kbr-blue) !important; text-decoration: underline !important; }
+
+/* Produkt i suma (pole płatności) – jeden pakiet, bez ilości */
+.form-product-item { padding: 16px 0 !important; border-bottom: 1px solid var(--kbr-border) !important; }
+.form-product-name, .form-product-item .form-product-name {
+  font-family: var(--kbr-serif) !important; font-weight: 500 !important;
+  font-size: 22px !important; line-height: 28px !important; color: #000 !important;
+}
+.form-product-description { font-size: 14px !important; line-height: 20px !important; color: var(--kbr-text) !important; }
+.form-product-details, .form-product-item .form-product-details b { font-size: 18px !important; font-weight: 700 !important; color: var(--kbr-ink) !important; }
+.form-sub-label-container .select_items, .form-product-custom_quantity, [id*="_quantity"] { display: none !important; }
+.form-payment-total, #payment_total, .payment_footer {
+  font-family: var(--kbr-sans) !important; font-size: 24px !important; font-weight: 700 !important; color: var(--kbr-ink) !important;
+}
+.form-payment-total b, .payment_footer .total-text { font-size: 16px !important; font-weight: 600 !important; }
+
+/* Przycisk – jak .btn--primary w serwisie */
+.form-submit-button, .submit-button {
+  font-family: var(--kbr-sans) !important;
+  height: 48px !important; min-width: 240px; padding: 0 28px !important;
+  font-size: 15px !important; font-weight: 700 !important; letter-spacing: .03em; text-transform: uppercase;
+  color: #fff !important; background: var(--kbr-crimson) !important;
+  border: 0 !important; border-radius: 3px !important; box-shadow: none !important;
+  transition: background .2s ease;
+}
+.form-submit-button:hover, .submit-button:hover { background: var(--kbr-crimson-dark) !important; }
+.form-submit-button:focus-visible { outline: 2px solid var(--kbr-blue) !important; outline-offset: 2px; }
+.form-buttons-wrapper, .form-submit-button-wrapper { padding: 28px 0 8px !important; border: 0 !important; justify-content: flex-start !important; text-align: left !important; }
+
+/* Ukryj stopkę/branding Jotform, jeśli plan na to pozwala (Ustawienia → Branding) */
+.formFooter, .formFooter-wrapper { display: none !important; }
+
+/* Mobile */
+@media (max-width: 560px) {
+  .form-section { padding: 0 16px !important; }
+  .form-line { padding: 8px 0 !important; }
+  .form-submit-button, .submit-button { width: 100% !important; min-width: 0; }
+  .form-address-table td { display: block; width: 100% !important; }
+}

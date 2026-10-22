@@ -16,7 +16,7 @@
     const noImg = '<span class="img-ph" aria-hidden="true"></span>';
     const archived = KBR.data.issues.filter(function (i) { return i.archived; });
     const tocReal = toc.map(function (m) { return '<a class="toc-item" href="' + ui.materialUrl(m) + '"><span class="t-label">' + esc(C.topic(m.topic).name) + '</span><span class="t-title-card">' + esc(m.title) + '</span><span class="t-meta">' + ui.metaLine(m) + (m.access === 'premium' ? ' · <span style="color:var(--c-gold);font-weight:700">Premium</span>' : '') + '</span></a>'; }).join('');
-    const tocMore = more.map(function (x) { return '<div class="toc-item"><span class="t-label">' + esc(x.section) + '</span><span class="t-title-card">' + esc(x.title) + '</span><span class="t-meta">' + esc(x.author) + '</span></div>'; }).join('');
+    const tocMore = more.map(function (x) { return '<div class="toc-item"><span class="t-label">' + esc(x.section) + '</span><span class="t-title-card">' + esc(x.title) + '</span><span class="t-meta"><span style="font-family:var(--f-tag)">' + esc(x.author) + '</span></span></div>'; }).join('');
     const arch = archived.map(function (i) {
       return '<article class="arch-item" data-arch="' + esc((i.label + ' ' + i.title + ' ' + i.description + ' ' + i.articles.join(' ')).toLowerCase()) + '">' + noImg +
         '<div><h3 class="arch-item__nr">' + esc(i.label) + '</h3><p class="arch-item__title">' + esc(i.title) + '</p><p class="arch-item__desc">' + esc(i.description) + '</p>' +
@@ -24,7 +24,7 @@
         (i.articles.length > 3 ? '<button type="button" class="toc-toggle arch-toggle" data-arch-toggle aria-expanded="false" aria-controls="arch-' + i.id + '" data-count="' + i.articles.length + '"><span>Pokaż wszystkie artykuły (' + i.articles.length + ')</span>' + I('chevDown', 16, 'stroke-width="2"') + '</button>' : '') + '</div></article>';
     }).join('');
     const html = '<div class="container"><header class="page-head">' + ui.crumbs([{ label: 'Strona główna', href: '#/' }, { label: 'Magazyn' }]) + '<h1>Magazyn KBR</h1><p>Aktualny numer kwartalnika i archiwum wydań.</p></header>' +
-      '<div class="issue"><div class="issue__cover"><img src="' + ui.img(issue.cover) + '" alt="Okładka ' + esc(issue.label) + ': ' + esc(issue.title) + '">' +
+      '<div class="issue"><div class="issue__cover"><div class="mag-cover mag-cover--page" role="img" aria-label="Okładka ' + esc(issue.label) + ': ' + esc(issue.title) + '">' + ui.magCoverBook(issue) + '<span class="mag-cover__shadow" aria-hidden="true"></span></div>' +
         '<div class="issue__actions"><button type="button" class="btn btn--primary btn--block" data-action="mag-open">Otwórz wersję elektroniczną' + I('chevRight', 16, 'stroke-width="2"') + '</button>' +
         '<button type="button" class="btn btn--outline btn--block" data-action="mag-download">Pobierz PDF' + I('chevRight', 16, 'stroke-width="2"') + '</button></div></div>' +
       '<div><span class="t-label">Aktualny numer</span><h2 class="magazine__nr" style="margin-top:8px">' + esc(issue.label.toUpperCase()) + '</h2><p class="t-lead" style="margin-top:16px">' + esc(issue.title) + '</p><p style="margin-top:8px">' + esc(issue.description) + '</p>' +
@@ -36,6 +36,8 @@
         '<div class="mag-archive__list">' + arch + '</div><p class="mag-archive__empty" data-arch-empty hidden>Brak wyników w archiwum. Spróbuj innej frazy.</p>' +
       '</div></section>';
     return { title: 'Magazyn ' + issue.label + ' – KBR', html: html, mount: function (root) {
+      const pc = root.querySelector('.mag-cover--page');
+      if (pc) { ui.magCoverMotion(pc, { tilt: true }); requestAnimationFrame(function () { requestAnimationFrame(function () { pc.classList.add('is-in'); }); }); }
       const tg = root.querySelector('[data-action="toc-toggle"]');
       if (tg) tg.addEventListener('click', function () {
         const box = root.querySelector('#toc-more'), open = box.hidden;
@@ -44,7 +46,7 @@
       });
       root.querySelectorAll('[data-action="mag-open"],[data-action="mag-download"]').forEach(function (b) {
         b.addEventListener('click', function () {
-          if (!KBR.subscription.has('magazine')) { KBR.app.navigate('#/subskrypcja'); setTimeout(function () { ui.toast('Wydanie elektroniczne magazynu jest dostępne w planach „Cyfrowy + Magazyn” i „Pełny dostęp”.'); }, 60); return; }
+          if (!KBR.subscription.has('magazine-pdf')) { KBR.app.navigate('#/subskrypcja'); setTimeout(function () { ui.toast('Magazyn w formacie PDF jest dostępny w pakietach „Cyfrowy” i „Pełny”.'); }, 60); return; }
           ui.toast(b.dataset.action === 'mag-open' ? 'Otwieranie czytnika wydania (symulacja prototypu).' : 'Pobieranie PDF (symulacja prototypu).');
         });
       });
@@ -95,11 +97,11 @@
   }
 
   KBR.pages.clubs = function () {
-    return simplePage('Kluby', [{ label: 'Wydarzenia', href: '#/wydarzenia' }, { label: 'Kluby' }], 'Społeczności praktyków, liderów i absolwentów.',
+    return simplePage('Kluby', [{ label: 'Kluby' }], 'Społeczności praktyków, liderów i absolwentów.',
       '<p>Lista klubów i ich proste strony zostaną przygotowane na podstawie oferty Kozminski Business Hub. Każdy klub będzie miał opis, najbliższe spotkania i przejście do zapisu w serwisie uczelni.</p><p><a href="https://www.kozminski.edu.pl/pl" target="_blank" rel="noopener">Przejdź do serwisu uczelni</a> (link zewnętrzny).</p>');
   };
   KBR.pages.executive = function () {
-    return simplePage('Strefa Kozminski Executive Education', [{ label: 'Wydarzenia', href: '#/wydarzenia' }, { label: 'Executive Education' }], 'Programy MBA, studia podyplomowe i szkolenia dla menedżerów.',
+    return simplePage('Strefa Kozminski Executive Education', [{ label: 'Executive Education' }], 'Programy MBA, studia podyplomowe i szkolenia dla menedżerów.',
       '<p>Lista programów i szkoleń oraz proste strony programów zostaną przygotowane na podstawie oferty uczelni. Rekrutacja prowadzi do zewnętrznych serwisów Akademii Leona Koźmińskiego.</p><p><a href="https://www.kozminski.edu.pl/pl" target="_blank" rel="noopener">Zobacz ofertę w serwisie uczelni</a> (link zewnętrzny).</p>');
   };
 

@@ -22,8 +22,8 @@ KBR.demo = (function () {
         '<div><h3>Przełącz stan</h3><div class="demo__grid">' +
           '<button type="button" class="btn btn--outline" data-demo="guest">' + I('userPlain', 18) + 'Gość (wyloguj)</button>' +
           '<button type="button" class="btn btn--outline" data-demo="free">' + I('bookmark', 18) + 'Konto bez subskrypcji</button>' +
-          '<button type="button" class="btn btn--outline" data-demo="sub">' + I('unlock', 18) + 'Aktywny subskrybent (plan Cyfrowy)</button></div>' +
-          '<p style="margin-top:8px;font-size:12px;color:var(--c-muted)">Konto testowe: ' + ui.esc(KBR.config.demoAccount.email) + '. Biblioteka konta jest zachowywana przy przełączaniu.</p></div>' +
+          '<button type="button" class="btn btn--outline" data-demo="sub">' + I('unlock', 18) + 'Aktywny subskrybent (plan Pełny)</button></div>' +
+          '<p style="margin-top:8px;font-size:12px;color:var(--c-muted)">Konto testowe: ' + ui.esc(KBR.config.demoAccount.email) + '.</p></div>' +
         '<div><h3>Limit bezpłatnych materiałów (założenie)</h3><form class="demo__row" id="demo-meter"><label for="demo-limit">Limit / miesiąc</label><input class="input" id="demo-limit" type="number" min="0" max="20" value="' + meter.limit + '"><button class="btn btn--outline" type="submit">Zastosuj</button></form>' +
           '<p style="margin-top:6px;font-size:12px;color:var(--c-muted)">Wykorzystano: ' + meter.used + '. 0 = licznik wyłączony.</p>' +
           '<button type="button" class="btn btn--ghost" data-demo="meter-reset" style="margin-top:4px">Wyzeruj licznik</button></div>' +
@@ -42,7 +42,7 @@ KBR.demo = (function () {
       const a = b.dataset.demo;
       if (a === 'guest') { KBR.auth.logout(); ui.toast('Stan demo: gość.'); }
       if (a === 'free') { KBR.auth.demoSignIn(KBR.config.demoAccount); KBR.subscription.demoClear(); ui.toast('Stan demo: konto bez subskrypcji.'); }
-      if (a === 'sub') { KBR.auth.demoSignIn(KBR.config.demoAccount); KBR.subscription.demoActivate('cyfrowy'); ui.toast('Stan demo: aktywny subskrybent.'); }
+      if (a === 'sub') { KBR.auth.demoSignIn(KBR.config.demoAccount); KBR.subscription.demoActivate('pelny'); ui.toast('Stan demo: aktywny subskrybent.'); }
       if (a === 'meter-reset') { KBR.access.resetMeter(); ui.toast('Licznik bezpłatnych materiałów wyzerowany.'); }
       if (a === 'reset') { KBR.resetDemo(); ui.toast('Dane demo zostały zresetowane.'); d.close(); KBR.app.navigate('#/'); return; }
       d.querySelector('#demo-state').textContent = stateLabel().replace(/&amp;/g, '&');

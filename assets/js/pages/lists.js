@@ -67,11 +67,11 @@
   KBR.pages.topic = function (route) {
     const t = C.topicBySlug(route.params.slug);
     if (!t) return KBR.pages.notFound();
-    const items = C.list({ topic: t.id, formats: formatsFromQuery(route) });
+    const items = C.list({ topic: t.id });
     const on = KBR.auth.currentUser() && KBR.follow.isFollowing(t.id);
     const followBtn = '<div class="topic-actions"><button type="button" class="save-btn" data-action="toggle-follow" data-id="' + t.id + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + I(on ? 'bookmarkFill' : 'bookmark', 18) + '<span>' + (on ? 'Obserwujesz temat' : 'Obserwuj cały temat') + '</span></button></div>';
     return { title: t.name + ' – KBR', html: page({ title: t.name, intro: 'Wszystkie formaty materiałów przypisanych do tego tematu głównego. Każdy materiał otwiera się pod tym samym adresem niezależnie od miejsca, z którego do niego trafiasz.',
-      crumbs: [{ label: 'Strona główna', href: '#/' }, { label: 'Tematy', href: '#/tematy' }, { label: t.name }], filters: formatChips(route), items: items, actions: followBtn }) };
+      crumbs: [{ label: 'Strona główna', href: '#/' }, { label: 'Tematy', href: '#/tematy' }, { label: t.name }], items: items }) };
   };
 
   /* Wyszukiwanie: zakres („Szukaj w”) jako pierwszy poziom, filtry zależne od zakresu jako drugi. */
@@ -85,7 +85,7 @@
   function personHit(a) {
     const r = personRoles(a);
     const roles = [r.autor ? 'Autor' : '', r.ekspert ? 'Ekspert' : ''].filter(Boolean).join(' · ');
-    return '<a class="hit" href="#/autor/' + a.id + '"><div class="avatar avatar--sm" aria-hidden="true">' + esc(a.initials.slice(0, 2)) + '</div><div class="hit__body"><span class="t-label">' + (roles || 'Osoba') + '</span><span class="hit__title">' + esc(a.name) + '</span><span class="hit__text">' + esc(a.bio) + '</span><span class="t-meta">' + countLabel(r.autor + r.ekspert) + '</span></div>' + I('chevRight', 18, 'stroke-width="2"') + '</a>';
+    return '<a class="hit" href="#/autor/' + a.id + '">' + ui.personPhoto(a, 'person-photo--48') + '<div class="hit__body"><span class="t-label">' + (roles || 'Osoba') + '</span><span class="hit__title">' + esc(a.name) + '</span><span class="hit__text">' + esc(a.bio) + '</span><span class="t-meta">' + countLabel(r.autor + r.ekspert) + '</span></div>' + I('chevRight', 18, 'stroke-width="2"') + '</a>';
   }
   function eventHit(e) {
     return '<a class="hit" href="#/wydarzenie/' + e.id + '"><img class="hit__img" src="' + ui.img(e.image) + '" alt="" loading="lazy"><div class="hit__body"><span class="t-label">' + esc(e.category) + '</span><span class="hit__title">' + esc(e.title) + '</span><span class="t-meta">' + esc(e.date) + ' · ' + esc(e.place) + '</span></div>' + I('chevRight', 18, 'stroke-width="2"') + '</a>';
@@ -147,6 +147,14 @@
       (results || empty) + '</div></div>' };
   };
 
+  KBR.pages.tag = function (route) {
+    const name = C.tagBySlug(route.params.slug);
+    if (!name) return KBR.pages.notFound();
+    const items = C.byTag(route.params.slug);
+    return { title: name + ' – KBR', html: page({ title: name, intro: 'Artykuły oznaczone tagiem „' + esc(name) + '”.',
+      crumbs: [{ label: 'Strona główna', href: '#/' }, { label: 'Artykuły', href: '#/artykuly' }, { label: 'Tag: ' + name }], filters: ' ', items: items }) };
+  };
+
   KBR.pages.author = function (route) {
     const a = C.author(route.params.id);
     if (!a) return KBR.pages.notFound();
@@ -157,7 +165,7 @@
     const nE = all.length - nA;
     const filters = chips('Rola w publikacji', [{ label: 'Wszystkie (' + all.length + ')', href: q(route, { rola: '' }), active: !role }, { label: 'Autorstwo (' + nA + ')', href: q(route, { rola: 'autor' }), active: role === 'autor' }, { label: 'Udział ekspercki (' + nE + ')', href: q(route, { rola: 'ekspert' }), active: role === 'ekspert' }]);
     return { title: a.name + ' – KBR', html: '<div class="container"><header class="page-head">' + ui.crumbs([{ label: 'Strona główna', href: '#/' }, { label: 'Autorzy i eksperci', href: '#/autorzy' }, { label: a.name }]) +
-      '<div style="display:flex;gap:24px;align-items:center"><div class="avatar" aria-hidden="true">' + esc(a.initials.slice(0, 2)) + '</div><h1>' + esc(a.name) + '</h1></div><p>' + esc(a.bio) + '</p></header>' +
+      '<div class="author-head">' + ui.personPhoto(a, 'person-photo--96') + '<div><h1>' + esc(a.name) + '</h1>' + (a.role ? '<p class="person-role">' + esc(a.role) + '</p>' : '') + ui.personContact(a) + '</div></div><p>' + esc(a.bio) + '</p></header>' +
       '<div class="list-layout"><div class="list-toolbar">' + filters + '<p class="result-count" role="status">' + countLabel(items.length) + '</p></div><div class="rows">' + items.map(ui.row).join('') + '</div></div></div>' };
   };
 

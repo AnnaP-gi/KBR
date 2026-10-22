@@ -141,7 +141,7 @@
       const s = KBR.subscription.get(); if (!s || s.status !== 'active') return false;
       const p = KBR.subscription.plan(s.planId); return !!p && p.entitlements.indexOf(entitlement) !== -1;
     },
-    orders: function () { const u = KBR.auth.currentUser(); return u ? S.get(ordersKey(u), []) : []; },
+    orders: function () { return KBR.orders.forUser(); },
     recordOrder: function (order) {
       const u = KBR.auth.currentUser(); if (!u) return;
       const list = S.get(ordersKey(u), []);
@@ -185,36 +185,38 @@
     },
     /* Narzędzie demo */
     demoActivate: function (planId) {
-      KBR.subscription.activate({ planId: planId || 'cyfrowy', period: 'month', orderId: 'DEMO-' + Date.now().toString(36).toUpperCase(), amount: KBR.subscription.price(planId || 'cyfrowy', 'month') });
+      const u = KBR.auth.currentUser(); if (!u) return;
+      grantAccess({ userId: u.id, planId: planId || 'cyfrowy', months: KBR.config.purchase.months, orderId: 'DEMO-' + Date.now().toString(36).toUpperCase(), amount: KBR.subscription.price(planId || 'cyfrowy', 'year'), shipping: null });
     },
     demoClear: function () { const u = KBR.auth.currentUser(); if (u) { S.remove(subKey(u)); KBR.bus.emit('subscription:change', null); } }
   };
 
   /* ----------------------------------------------- Access & meter (limit) */
-  function monthKey() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
-  function meterKey() { const u = KBR.auth.currentUser(); return 'meter.' + (u ? u.id : 'guest'); }
-  function readMeter() { const m = S.get(meterKey(), null); return m && m.month === monthKey() ? m : { month: monthKey(), ids: [] }; }
+  /* Licznik dotyczy przeglądarki (nie konta) i nie odnawia się w czasie. */
+  const METER_KEY = 'meter.browser';
+  function readMeter() { const m = S.get(METER_KEY, null); return m && Array.isArray(m.ids) ? m : { ids: [] }; }
   KBR.access = {
     meterLimit: function () { const v = S.get('settings.meterLimit', null); return v == null ? KBR.config.meter.defaultLimit : v; },
     setMeterLimit: function (n) { S.set('settings.meterLimit', Math.max(0, parseInt(n, 10) || 0)); KBR.bus.emit('settings:change'); },
     meterState: function () { const m = readMeter(); return { used: m.ids.length, limit: KBR.access.meterLimit() }; },
-    resetMeter: function () { S.remove(meterKey()); },
-    /* Ocena dostępu do materiału. consume=true nalicza wyświetlenie w limicie. */
+    resetMeter: function () { S.remove(METER_KEY); },
+    /* Ocena dostępu do materiału. consume=true nalicza wejście w limicie przeglądarki. */
     resolve: function (m, consume) {
-      const subscribed = KBR.subscription.has('premium');
+      const subscribed = KBR.subscription.has('premium') || (!!m.issue && KBR.subscription.has('magazine-articles'));
       if (m.access === 'open') return { full: true, kind: 'open' };
       if (subscribed) return { full: true, kind: 'subscriber' };
       if (m.access === 'premium') return { full: false, kind: 'premium' };
-      /* metered */
+      /* bezpłatny materiał: zalogowani czytają bez limitu, goście mają N wejść na przeglądarkę */
+      if (KBR.auth.currentUser()) return { full: true, kind: 'registered' };
       const limit = KBR.access.meterLimit();
       if (limit === 0) return { full: true, kind: 'open' };
       const meter = readMeter();
       if (meter.ids.indexOf(m.id) !== -1) return { full: true, kind: 'metered', used: meter.ids.length, limit: limit };
       if (meter.ids.length < limit) {
-        if (consume) { meter.ids.push(m.id); S.set(meterKey(), meter); }
+        if (consume) { meter.ids.push(m.id); S.set(METER_KEY, meter); }
         return { full: true, kind: 'metered', used: meter.ids.length + (consume ? 0 : 1), limit: limit };
       }
-      return { full: false, kind: 'meter-exhausted', used: meter.ids.length, limit: limit };
+      return { full: false, kind: 'login-required', used: meter.ids.length, limit: limit };
     }
   };
 
@@ -243,20 +245,66 @@
     amount: function (d) { d = d || KBR.checkout.get(); return d ? KBR.subscription.price(d.planId, d.period) : 0; }
   };
 
-  /* ------------------------------------------ Symulowany operator płatności
-     Nie przyjmuje ani nie przetwarza danych kart. Wynik wybiera tester. */
-  KBR.payments = {
-    simulate: async function (draft, outcome) {
-      await delay(1200);
-      const attemptId = uid('pay');
-      const order = { orderId: draft.orderId, attemptId: attemptId, planId: draft.planId, period: draft.period,
-        amount: KBR.checkout.amount(draft), method: draft.method, createdAt: new Date().toISOString(),
-        invoice: draft.invoice && draft.invoice.wanted ? draft.invoice : null,
-        shipping: draft.shipping || null,
-        status: outcome === 'success' ? 'paid' : outcome === 'failure' ? 'failed' : 'canceled' };
-      if (outcome !== 'canceled') KBR.subscription.recordOrder(order);
-      if (outcome === 'success') KBR.subscription.activate(order);
-      return order;
+  /* ------------------------------------------------ Zamówienia (SYMULACJA SERWERA)
+     W produkcji ten moduł to backend KBR. Front-end może utworzyć zamówienie i odczytać jego status,
+     ale NIE może nadać dostępu. Dostęp nadaje wyłącznie KBR.server.paymentWebhook – odpowiednik
+     endpointu, który weryfikuje płatność u operatora / w API Jotform. */
+  const ORD = 'server.orders';
+  function allOrders() { return S.get(ORD, {}); }
+  function saveOrder(o) { const a = allOrders(); a[o.orderId] = o; S.set(ORD, a); KBR.bus.emit('order:change', o); return o; }
+  function grantAccess(o) {
+    const key = 'subscription.' + o.userId;
+    const prev = S.get(key, null);
+    const now = new Date();
+    /* przedłużenie aktywnego dostępu do tego samego pakietu liczy się od końca obecnego okresu */
+    const start = prev && prev.planId === o.planId && new Date(prev.validUntil) > now ? new Date(prev.validUntil) : now;
+    const until = new Date(start); until.setMonth(until.getMonth() + o.months);
+    if (o.shipping) S.set('shipping.' + o.userId, o.shipping);
+    const sub = { planId: o.planId, period: 'year', status: 'active', source: 'individual', startedAt: now.toISOString(),
+      validUntil: until.toISOString(), autoRenew: false, orderId: o.orderId, amount: o.amount };
+    S.set(key, sub);
+    KBR.bus.emit('subscription:change', sub);
+    return sub;
+  }
+  KBR.orders = {
+    create: function (draft) {
+      const u = KBR.auth.currentUser(); if (!u) return null;
+      const o = { orderId: 'KBR-' + new Date().getFullYear() + '-' + Math.random().toString(36).slice(2, 7).toUpperCase(),
+        userId: u.id, email: u.email, planId: draft.planId, months: KBR.config.purchase.months,
+        amount: KBR.subscription.price(draft.planId, 'year'), currency: 'PLN', status: 'created',
+        createdAt: new Date().toISOString(), sourceId: draft.sourceId || null };
+      return saveOrder(o);
+    },
+    get: function (id) { const o = allOrders()[id]; const u = KBR.auth.currentUser(); return o && u && o.userId === u.id ? o : null; },
+    forUser: function () {
+      const u = KBR.auth.currentUser(); if (!u) return [];
+      return Object.values(allOrders()).filter(function (o) { return o.userId === u.id && o.status !== 'created'; })
+        .sort(function (a, b) { return b.createdAt.localeCompare(a.createdAt); });
+    },
+    /* Informacja z przeglądarki, że formularz został wysłany. NIE nadaje dostępu. */
+    markSubmitted: function (id, data) {
+      const o = KBR.orders.get(id); if (!o || o.status === 'paid') return o;
+      return saveOrder(Object.assign(o, { status: 'awaiting_payment', submittedAt: new Date().toISOString(),
+        customer: data && data.customer || o.customer || null, shipping: data && data.shipping || null, invoice: data && data.invoice || null }));
+    }
+  };
+  KBR.server = {
+    /* Odpowiednik webhooka: payload = { orderId, paymentStatus: 'paid' | 'failed' | 'canceled', amount, transactionId }.
+       W produkcji: podpis/weryfikacja żądania, ponowne pobranie statusu płatności z API, idempotencja. */
+    paymentWebhook: async function (payload) {
+      await delay(700);
+      const a = allOrders(); const o = a[payload.orderId];
+      if (!o) return { ok: false, error: 'unknown-order' };
+      if (o.status === 'paid') return { ok: true, idempotent: true };
+      if (payload.paymentStatus === 'paid') {
+        if (Number(payload.amount) !== Number(o.amount)) { o.status = 'review'; o.note = 'Kwota płatności różni się od kwoty zamówienia.'; saveOrder(o); return { ok: false, error: 'amount-mismatch' }; }
+        o.status = 'paid'; o.paidAt = new Date().toISOString(); o.transactionId = payload.transactionId || null;
+        const sub = grantAccess(o); o.validUntil = sub.validUntil;
+      } else {
+        o.status = payload.paymentStatus === 'failed' ? 'failed' : 'canceled';
+      }
+      saveOrder(o);
+      return { ok: true };
     }
   };
 

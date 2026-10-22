@@ -7,10 +7,25 @@ KBR.ui = KBR.ui || {};
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   };
   ui.img = function (file) { return 'assets/img/' + file; };
+  /* Osoba: portret (lub inicjały), linijka „kim jest” i kontakt */
+  ui.personPhoto = function (p, cls) {
+    /* wycięty portret „wychodzi” głową ponad koło w kolorze tła */
+    const tones = ['#e3e8fb', '#efe4d6', '#e6ece8'];
+    let h = 0; String(p.id || '').split('').forEach(function (c) { h = (h + c.charCodeAt(0)) % tones.length; });
+    return p.photo ? '<span class="person-photo person-photo--cut ' + (cls || '') + '" style="--tone:' + tones[h] + '" aria-hidden="true"><img src="' + ui.img(p.photo) + '" alt="" loading="lazy"></span>'
+      : '<span class="avatar person-photo ' + (cls || '') + '" aria-hidden="true">' + ui.esc((p.initials || '').slice(0, 2)) + '</span>';
+  };
+  ui.personContact = function (p) {
+    if (!p.linkedin && !p.email) return '';
+    const I = KBR.icon;
+    return '<span class="person-contact">' +
+      (p.linkedin ? '<a href="' + ui.esc(p.linkedin) + '" target="_blank" rel="noopener" aria-label="' + ui.esc(p.name) + ' na LinkedIn (otwiera się w nowej karcie)">' + I('linkedin', 16) + '<span>LinkedIn</span></a>' : '') +
+      (p.email ? '<a href="mailto:' + ui.esc(p.email) + '" aria-label="Napisz do: ' + ui.esc(p.name) + '">' + I('mail', 16) + '<span>Napisz wiadomość</span></a>' : '') + '</span>';
+  };
   ui.dateShort = function (iso) { const d = new Date(iso); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear() + ' r.'; };
   ui.dateLong = function (iso) { return new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }); };
   ui.dateTime = function (iso) { return new Date(iso).toLocaleString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
-  ui.money = function (n) { return n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + KBR.config.currency; };
+  ui.money = function (n) { if (n == null || isNaN(n)) return '[cena do ustalenia]'; return n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + KBR.config.currency; };
   ui.minutes = function (n) {
     const r = n % 10, r100 = n % 100;
     const word = n === 1 ? 'minuta' : (r >= 2 && r <= 4 && (r100 < 12 || r100 > 14)) ? 'minuty' : 'minut';
@@ -31,6 +46,7 @@ KBR.ui = KBR.ui || {};
   /* Przycisk zapisu – ten sam komponent na stronie artykułu, w listach i w bibliotece.
      Stan synchronizuje ui.syncSaveButtons() po każdej zmianie biblioteki. */
   ui.saveButton = function (m, opts) {
+    return '';
     opts = opts || {};
     const saved = KBR.auth.currentUser() && KBR.library.isSaved(m.id);
     return '<button type="button" class="save-btn' + (opts.compact ? ' save-btn--compact' : '') + '" data-action="toggle-save" data-id="' + m.id + '" aria-pressed="' + (saved ? 'true' : 'false') + '"' +

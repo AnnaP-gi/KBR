@@ -199,7 +199,7 @@ KBR.data.materials = [
     id: 'ai-zdolnosc-organizacyjna', format: 'article', topic: 'ai', access: 'premium', issue: '2026-03',
     title: 'AI jako zdolność organizacyjna, nie projekt IT',
     lead: 'Firmy, które traktują sztuczną inteligencję jako jednorazowe wdrożenie, rzadko osiągają trwałe efekty. Pokazujemy, jak budować kompetencję, która rośnie razem z organizacją.',
-    authors: [{ id: 'anna-nowak', role: 'autor' }, { id: 'marta-wisniewska', role: 'ekspert' }], date: '2026-09-15', readTime: 12,
+    authors: [{ id: 'anna-nowak', role: 'autor' }, { id: 'tomasz-zielinski', role: 'autor' }, { id: 'marta-wisniewska', role: 'ekspert' }], date: '2026-09-15', readTime: 12,
     image: 'magazyn-ai-organizacja.jpg', imageAlt: 'Portret kobiety w dżinsowej koszuli na granatowym tle', imagePos: '50% 30%',
     body: [
       { t: 'p', x: 'Wiele firm rozpoczęło przygodę z AI od projektów pilotażowych. Część z nich przyniosła obiecujące wyniki, ale niewiele przełożyło się na trwałą zmianę sposobu pracy. Powód jest zwykle ten sam: wdrożenie potraktowano jak projekt technologiczny z datą zakończenia.' },
@@ -341,7 +341,8 @@ KBR.data.materials = [
 
 /* Wydania magazynu */
 KBR.data.issues = [
-  { id: '2026-03', label: 'Nr 03 / 2026', title: 'STEP: europejska odpowiedź na wyścig o technologie krytyczne', cover: 'magazyn-okladka-03-2026.jpg', current: true,
+  { id: '2026-03', label: 'Zima 2026', title: 'How AI Is Shaping Strategy', cover: 'magazyn-okladka-kbr.jpg', current: true,
+    coverHeadline: 'How AI<br>Is Shaping<br>Strategy', coverSide: ['Prof. Grzegorz W. Kołodko', 'Geopolitical changes and their impact'],
     description: 'Numer poświęcony technologiom, sztucznej inteligencji i nowemu spojrzeniu na przywództwo.',
     toc: ['ai-zdolnosc-organizacyjna', 'nowy-kontrakt-lidera', 'ryzyko-modeli-rada-nadzorcza'],
     tocMore: [
