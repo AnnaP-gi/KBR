@@ -10,8 +10,7 @@
 
   function shell(active, inner) {
     const u = KBR.auth.currentUser();
-    const lib = KBR.library.get();
-    const links = [['biblioteka', 'Moja biblioteka', lib.saved.length], ['subskrypcja', 'Moja subskrypcja'], ['dane', 'Moje dane'], ['platnosci', 'Płatności i faktury'], ['preferencje', 'Newslettery i preferencje']];
+    const links = [['subskrypcja', 'Moja subskrypcja'], ['dane', 'Moje dane'], ['platnosci', 'Płatności i faktury'], ['preferencje', 'Newslettery i preferencje']];
     return '<div class="container account"><aside class="account-nav" aria-label="Konto">' +
       '<div class="who"><div class="avatar avatar--sm" aria-hidden="true">' + esc((u.firstName || u.email).slice(0, 1).toUpperCase()) + '</div><div><strong>' + esc(u.firstName || 'Czytelnik') + '</strong><span>' + esc(u.email) + '</span></div></div>' +
       '<nav aria-label="Sekcje konta">' + links.map(function (l) { return '<a href="#/konto/' + l[0] + '"' + (l[0] === active ? ' aria-current="page"' : '') + '>' + l[1] + (l[2] ? '<span class="count" style="font-size:12px;color:var(--c-muted)">' + l[2] + '</span>' : '') + '</a>'; }).join('') + '</nav>' +
@@ -109,34 +108,39 @@
     let inner = '<h1>Moja subskrypcja</h1>';
     if (sub && sub.status === 'active') {
       const p = KBR.subscription.plan(sub.planId), per = KBR.config.periods[sub.period];
-      inner += '<p class="sub">Masz pełny dostęp do materiałów Premium. Twoja biblioteka została zachowana.</p>' +
+      inner += '<p class="sub">Masz pełny dostęp do materiałów Premium.</p>' +
         '<section class="panel" aria-labelledby="h-sub"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center"><h2 id="h-sub">Aktualny plan</h2><span class="status-pill status-pill--ok">' + I('checkCircle', 16) + 'Aktywna</span></div>' +
         '<p class="t-serif" style="font-size:36px;line-height:40px;margin-top:16px">' + esc(p.name) + ' <span class="demo-tag">Dane demonstracyjne</span></p>' +
-        '<dl class="dl"><dt>Źródło dostępu</dt><dd>Zakup indywidualny</dd><dt>Okres rozliczeniowy</dt><dd>' + per.label + ' (' + ui.money(sub.amount) + ' / ' + per.unit + ')</dd>' +
-        '<dt>Aktywna od</dt><dd>' + ui.dateLong(sub.startedAt) + '</dd><dt>' + (sub.autoRenew ? 'Następne odnowienie' : 'Dostęp ważny do') + '</dt><dd>' + ui.dateLong(sub.validUntil) + '</dd>' +
+        '<dl class="dl"><dt>Źródło dostępu</dt><dd>Zakup indywidualny</dd><dt>Okres i płatność</dt><dd>12 miesięcy, płatność jednorazowa (' + ui.money(sub.amount) + ')</dd>' +
+        '<dt>Aktywna od</dt><dd>' + ui.dateLong(sub.startedAt) + '</dd><dt>Dostęp ważny do</dt><dd>' + ui.dateLong(sub.validUntil) + '</dd><dt>Odnawianie</dt><dd>Brak – po wygaśnięciu możesz kupić kolejne 12 miesięcy</dd>' +
         '<dt>Numer zamówienia</dt><dd>' + esc(sub.orderId) + '</dd><dt>Zakres</dt><dd>' + p.features.filter(function (x) { return x.included; }).map(function (x) { return esc(x.text); }).join('<br>') + '</dd></dl>' +
-        '<div class="btn-row" style="margin-top:24px"><a class="btn btn--primary" href="#/konto/biblioteka">Przejdź do biblioteki</a><a class="btn btn--outline" href="#/subskrypcja">Porównaj plany</a>' +
-        '<button type="button" class="btn btn--ghost" data-action="auto-renew" data-on="' + (sub.autoRenew ? '0' : '1') + '">' + (sub.autoRenew ? 'Wyłącz automatyczne odnawianie' : 'Włącz automatyczne odnawianie') + '</button></div>' +
-        '<p class="notice notice--demo" style="margin-top:20px">' + I('info', 18) + '<span>Zmiana planu, anulowanie i zasady odnawiania wymagają ustaleń biznesowych i obsługi serwerowej. Przełącznik odnawiania jest symulacją.</span></p></section>' +
+        '<div class="btn-row" style="margin-top:24px"><a class="btn btn--primary" href="#/subskrypcja">Porównaj pakiety</a></div>' +
+        '<p class="notice notice--demo" style="margin-top:20px">' + I('info', 18) + '<span>Zmiana pakietu w trakcie okresu dostępu wymaga ustaleń biznesowych.</span></p></section>' +
         (p.print ? printPanel() : '');
     } else {
-      inner += '<p class="sub">Na tym koncie nie ma aktywnej subskrypcji. Możesz czytać materiały otwarte, zapisywać materiały w bibliotece i korzystać z darmowego limitu.</p>' +
+      inner += '<p class="sub">Na tym koncie nie ma aktywnej subskrypcji. Możesz czytać materiały otwarte i korzystać z darmowego limitu.</p>' +
         '<section class="panel panel--tint" aria-labelledby="h-nosub"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center"><h2 id="h-nosub">Status</h2><span class="status-pill status-pill--none">Brak subskrypcji</span></div>' +
-        '<p style="margin-top:12px">Subskrypcja odblokowuje wszystkie materiały Premium – również te, które masz już zapisane w bibliotece.</p>' +
-        '<div class="btn-row" style="margin-top:20px"><a class="btn btn--primary" href="#/subskrypcja">Wybierz subskrypcję' + I('chevRight', 16, 'stroke-width="2"') + '</a><a class="btn btn--outline" href="#/dostep/firmy">Dostęp dla firm</a><a class="btn btn--ghost" href="#/dostep/akademicki">Dostęp akademicki</a></div></section>';
+        '<p style="margin-top:12px">Subskrypcja odblokowuje wszystkie materiały Premium.</p>' +
+        '<div class="btn-row" style="margin-top:20px"><a class="btn btn--primary" href="#/subskrypcja">Wybierz subskrypcję' + I('chevRight', 16, 'stroke-width="2"') + '</a></div></section>';
     }
     inner += ordersTable(orders) +
-      '<p class="notice" style="margin-top:24px">' + I('info', 18) + '<span>Dostępne opcje konta mogą zależeć od źródła uprawnień. Widok dla dostępu firmowego i akademickiego (bez faktur wystawianych organizacji) wymaga osobnego zaprojektowania.</span></p>';
+      '<p class="notice" style="margin-top:24px">' + I('info', 18) + '<span>Dostępne opcje konta mogą zależeć od źródła uprawnień. </span></p>';
     return { title: 'Moja subskrypcja – KBR', html: shell('subskrypcja', inner) };
   };
 
   function ordersTable(orders) {
     if (!orders.length) return '';
-    return '<section class="panel" aria-labelledby="h-orders"><h2 id="h-orders">Historia płatności</h2><div class="table-wrap"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Zamówienie</th><th scope="col">Plan</th><th scope="col">Kwota</th><th scope="col">Status</th></tr></thead><tbody>' +
+    const ST = {
+      paid: '<span class="status-pill status-pill--ok">Opłacono</span>',
+      awaiting_payment: '<span class="status-pill status-pill--none">Oczekuje na płatność</span>',
+      review: '<span class="status-pill status-pill--warn">W weryfikacji</span>',
+      failed: '<span class="status-pill status-pill--warn">Nieudana</span>',
+      canceled: '<span class="status-pill status-pill--none">Anulowano</span>'
+    };
+    return '<section class="panel" aria-labelledby="h-orders"><h2 id="h-orders">Historia zamówień</h2><div class="table-wrap"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Zamówienie</th><th scope="col">Pakiet</th><th scope="col">Kwota</th><th scope="col">Status</th></tr></thead><tbody>' +
       orders.map(function (o) {
         const p = KBR.subscription.plan(o.planId);
-        const st = o.status === 'paid' ? '<span class="status-pill status-pill--ok">Opłacono</span>' : '<span class="status-pill status-pill--warn">Nieudana</span>';
-        return '<tr><td>' + ui.dateTime(o.createdAt) + '</td><td>' + esc(o.orderId) + '</td><td>' + esc(p ? p.name : o.planId) + ', ' + KBR.config.periods[o.period].label.toLowerCase() + '</td><td>' + ui.money(o.amount) + '</td><td>' + st + '</td></tr>';
+        return '<tr><td>' + ui.dateTime(o.createdAt) + '</td><td><a class="link" href="#/zamowienie/status?nr=' + encodeURIComponent(o.orderId) + '">' + esc(o.orderId) + '</a></td><td>' + esc(p ? p.name : o.planId) + ', 12 mies.</td><td>' + ui.money(o.amount) + '</td><td>' + (ST[o.status] || esc(o.status)) + '</td></tr>';
       }).join('') + '</tbody></table></div></section>';
   }
 
@@ -191,8 +195,8 @@
     const g = guard(route); if (g) return g;
     const orders = KBR.subscription.orders();
     const inner = '<h1>Płatności i faktury</h1><p class="sub">Metoda płatności, rozliczenia i dokumenty.</p>' +
-      '<section class="panel" aria-labelledby="h-method"><h2 id="h-method">Metoda płatności</h2><p style="margin-top:12px">Prototyp nie przechowuje danych kart ani innych danych płatniczych. Zarządzanie metodą płatności zależy od wybranego operatora (do decyzji).</p></section>' +
-      (orders.length ? ordersTable(orders) : '<section class="panel"><h2>Historia płatności</h2><p style="margin-top:12px">Brak płatności na tym koncie.</p></section>') +
+      '<section class="panel" aria-labelledby="h-method"><h2 id="h-method">Metoda płatności</h2><p style="margin-top:12px">Płatności obsługuje Jotform wraz z operatorem płatności. Serwis KBR nie przechowuje danych kart. Każde zamówienie to jednorazowa płatność za 12 miesięcy, bez zapisanej metody płatności.</p></section>' +
+      (orders.length ? ordersTable(orders) : '<section class="panel"><h2>Historia zamówień</h2><p style="margin-top:12px">Brak płatności na tym koncie.</p></section>') +
       '<section class="panel" aria-labelledby="h-docs"><h2 id="h-docs">Dokumenty</h2><p style="margin-top:12px">Faktury będą dostępne do pobrania po integracji z systemem rozliczeń. <span class="demo-tag">Widok demonstracyjny</span></p></section>';
     return { title: 'Płatności i faktury – KBR', html: shell('platnosci', inner) };
   };
@@ -204,7 +208,7 @@
     const inner = '<h1>Newslettery i preferencje</h1><p class="sub">Wybierz, jakie wiadomości chcesz otrzymywać i które tematy Cię interesują.</p>' +
       '<form class="panel" id="pref-form"><fieldset class="fieldset"><legend>Newslettery</legend>' +
       '<label class="check" for="pr-nl"><input type="checkbox" id="pr-nl"' + (u.consents.newsletter ? ' checked' : '') + '><span>Cotygodniowy newsletter KBR</span></label>' +
-      '<label class="check" for="pr-mk"><input type="checkbox" id="pr-mk"' + (u.consents.marketing ? ' checked' : '') + '><span>Wydarzenia i oferta edukacyjna Akademii Leona Koźmińskiego</span></label></fieldset>' +
+      '<label class="check" for="pr-mk"><input type="checkbox" id="pr-mk"' + (u.consents.marketing ? ' checked' : '') + '><span>Oferta edukacyjna Akademii Leona Koźmińskiego</span></label></fieldset>' +
       '<fieldset class="fieldset" style="margin-top:28px"><legend>Interesujące mnie tematy</legend>' +
       KBR.data.topics.map(function (t) { return '<label class="check" for="pr-t-' + t.id + '"><input type="checkbox" id="pr-t-' + t.id + '" data-topic="' + t.id + '"' + (interests.indexOf(t.id) !== -1 ? ' checked' : '') + '><span>' + esc(t.name) + '</span></label>'; }).join('') + '</fieldset>' +
       '<div class="btn-row" style="margin-top:24px"><button class="btn btn--primary" type="submit">Zapisz preferencje</button><span role="status" class="t-meta" id="pr-status"></span></div></form>';

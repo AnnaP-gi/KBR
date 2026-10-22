@@ -10,34 +10,26 @@ KBR.app = (function () {
     [/^\/artykuly$/, P.articles],
     [/^\/artykul\/([\w-]+)$/, P.article, ['id']],
     [/^\/tematy\/([\w-]+)$/, P.topic, ['slug']],
-    [/^\/studia-przypadkow$/, P.formatList(['case'], 'Studia przypadków', 'Pogłębione analizy transformacji konkretnych organizacji.', 'Studia przypadków')],
-    [/^\/podcasty$/, P.formatList(['podcast', 'video'], 'Podcasty i wideo', 'Rozmowy z praktykami biznesu i naukowcami. Jedna lista z rozróżnieniem formatów.', 'Podcasty i wideo')],
     [/^\/magazyn$/, P.magazine],
     [/^\/tematy$/, P.topics],
-    [/^\/wydarzenia$/, P.events],
-    [/^\/wydarzenie\/([\w-]+)$/, P.event, ['id']],
-    [/^\/kluby$/, P.clubs],
-    [/^\/executive-education$/, P.executive],
-    [/^\/wyszukiwanie$/, P.search],
     [/^\/autorzy$/, P.authors],
     [/^\/autor\/([\w-]+)$/, P.author, ['id']],
+    [/^\/tag\/([\w-]+)$/, P.tag, ['slug']],
     [/^\/rejestracja$/, P.register],
     [/^\/logowanie$/, P.login],
     [/^\/reset-hasla$/, P.resetRequest],
     [/^\/reset-hasla\/nowe$/, P.resetNew],
-    [/^\/konto$/, function () { return P.redirect('#/konto/biblioteka'); }],
-    [/^\/konto\/biblioteka$/, P.library],
+    [/^\/konto$/, function () { return P.redirect('#/konto/subskrypcja'); }],
     [/^\/konto\/subskrypcja$/, P.mySubscription],
     [/^\/konto\/dane$/, P.myData],
     [/^\/konto\/platnosci$/, P.payments],
     [/^\/konto\/preferencje$/, P.preferences],
     [/^\/subskrypcja$/, P.plans],
     [/^\/zamowienie$/, P.order],
+    [/^\/zamowienie\/status$/, P.orderStatus],
     [/^\/zamowienie\/podsumowanie$/, P.orderSummary],
     [/^\/platnosc$/, P.payment],
     [/^\/platnosc\/wynik$/, P.paymentResult],
-    [/^\/dostep\/firmy$/, P.corporate],
-    [/^\/dostep\/akademicki$/, P.academic],
     [/^\/strona\/([\w-]+)$/, P.info, ['slug']]
   ];
 
@@ -197,7 +189,7 @@ KBR.app = (function () {
         t.innerHTML = I(show ? 'eyeOff' : 'eye', 18) + '<span>' + (show ? 'Ukryj' : 'Pokaż') + '</span><span class="visually-hidden"> hasło</span>';
         break;
       }
-      case 'toggle-search': case 'toggle-drawer': {
+      case 'toggle-drawer': {
         const el = document.getElementById(t.getAttribute('aria-controls'));
         const open = !el.classList.contains('is-open');
         el.classList.toggle('is-open', open); t.setAttribute('aria-expanded', String(open));
@@ -266,7 +258,7 @@ KBR.app = (function () {
     });
     window.addEventListener('hashchange', render);
     KBR.bus.on('library:change', function () { ui.syncSaveButtons(); });
-    KBR.bus.on('subscription:change', function () { if (!/^#\/platnosc/.test(currentHash())) render(); });
+    KBR.bus.on('subscription:change', function () { if (!/^#\/(platnosc|zamowienie)/.test(currentHash())) render(); });
     KBR.demo.init();
     render();
   }

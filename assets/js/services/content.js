@@ -1,6 +1,12 @@
 /* Zapytania o treści – odpowiednik przyszłego API CMS. */
 KBR.content = (function () {
   const D = KBR.data;
+  D.materials = D.materials.filter(function (m) { return m.format !== 'podcast' && m.format !== 'video'; })
+    .map(function (m) { if (m.format === 'case') { m.format = 'article'; delete m.caseLogo; } return m; });
+  function tagSlug(s) { return String(s).toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  function tags(m) { return (D.tags && D.tags[m.id]) || []; }
+  function tagBySlug(slug) { let name = null; D.materials.forEach(function (m) { tags(m).forEach(function (t) { if (tagSlug(t) === slug) name = t; }); }); return name; }
+  function byTag(slug) { return sortByDate(D.materials.filter(function (m) { return tags(m).some(function (t) { return tagSlug(t) === slug; }); })); }
   const byId = {};
   D.materials.forEach(function (m) { byId[m.id] = m; });
 
@@ -57,5 +63,5 @@ KBR.content = (function () {
   function event(id) { return D.events.find(function (e) { return e.id === id; }) || null; }
 
   return { get: get, topic: topic, topicBySlug: topicBySlug, author: author, format: format, isMedia: isMedia,
-    list: list, search: search, related: related, issue: issue, currentIssue: currentIssue, event: event };
+    list: list, search: search, tags: tags, tagSlug: tagSlug, tagBySlug: tagBySlug, byTag: byTag, related: related, issue: issue, currentIssue: currentIssue, event: event };
 })();
